@@ -2,87 +2,109 @@ use sha2::{Sha256, Digest};
 use serde::{Serialize, Deserialize};
 // use bincode;
 
-#[allow(dead_code)]
-#[derive(Serialize, Deserialize, Debug)]
-struct TransactionInput {
-    outputpoint_hash: String,
-    outputpoint_idx: u32,
-    scriptkey: String,
 
-    amount: u128,
-    
-    sequence: u128,
-    confirmations: u128,
+// #[derive(Serialize, Deserialize, Debug, Clone, Eq, Hash, PartialEq, PartialOrd, Ord)]
+// pub struct OutPoint {
+//     /// The referenced transaction's txid.
+//     pub txid: String,
+//     /// The index of the referenced output in its transaction's vout.
+//     pub vout: u32,
+// }
 
-    spendable: bool,
-    solvable: bool
+// impl OutPoint {
+//     /// Creates a new [`OutPoint`].
+//     #[inline]
+//     pub fn new(txid: String, vout: u32) -> OutPoint {
+//         OutPoint { txid, vout }
+//     }
+
+//     #[inline]
+//     pub fn null() -> OutPoint {
+//         OutPoint {
+//             txid: String::from(""),
+//             vout: u32::max_value(),
+//         }
+//     }
+
+//     #[inline]
+//     pub fn is_null(&self) -> bool {
+//         *self == OutPoint::null()
+//     }
+// }
+
+// impl Default for OutPoint {
+//     fn default() -> Self {
+//         OutPoint::null()
+//     }
+// }
+
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+pub struct TransactionInput {
+    pub txid: String,
+    pub vout: u32,
+    pub scriptkey: String,
 }
 
-#[allow(dead_code)]
-#[derive(Serialize, Deserialize, Debug)]
-struct TransactionOutput {
-    idx: u32,
-    address: String,
-    scriptkey: String,
-
-    amount: u128,
-    
-    sequence: u128,
-    confirmations: u128,
-
-    spendable: bool,
-    solvable: bool
+impl Default for TransactionInput {
+    fn default() -> Self {
+        TransactionInput {
+            txid: String::from(""),
+            vout: u32::MAX,
+            scriptkey: String::from("")
+        }
+    }
 }
 
-#[allow(dead_code)]
-#[derive(Serialize, Deserialize, Debug)]
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+pub struct TransactionOutput {
+    pub n: u32,
+    pub address: String,
+    pub scriptkey: String,
+
+    pub value: u32,
+}
+
+impl Default for TransactionOutput {
+    fn default() -> Self {
+        TransactionOutput {
+            n: u32::MAX,
+            address: String::from(""),
+            scriptkey: String::from(""),
+            value: u32::MAX
+        }
+    }
+}
+
+
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct Transaction {
-    inputs: Vec<TransactionInput>,
-    outputs: Vec<TransactionOutput>,
-    transaction_index: u128,
+    pub vin: Vec<TransactionInput>,
+    pub vout: Vec<TransactionOutput>,
     // transaction_hash: Vec<u8>
 }
 
-pub fn build_transaction(index: u128) -> Option<Transaction> {
+
+pub fn build_transaction() -> Option<Transaction> {
     let mut tx: Transaction = Transaction {
-        inputs: Vec::new(),
-        outputs: Vec::new(),
-        transaction_index: index,
+        vin: Vec::new(),
+        vout: Vec::new(),
     };
     
-    tx.inputs.push(TransactionInput {
-        outputpoint_hash: "".to_string(),
-        outputpoint_idx: 0,
-        scriptkey: "".to_string(),
-        amount: 0,
-        sequence: 0,
-        confirmations: 0,
-        spendable: false,
-        solvable: false
+    tx.vin.push(TransactionInput {
+        txid: String::from(""),
+        vout: 0,
+        scriptkey: String::from("")
     });
 
-    tx.outputs.push(TransactionOutput {
-        idx: 0,
-        address: "".to_string(),
-        scriptkey: "".to_string(),
-        amount: 0,
-        sequence: 0,
-        confirmations: 0,
-        spendable: false,
-        solvable: false
+    tx.vout.push(TransactionOutput {
+        n: 0,
+        address: String::from(""),
+        scriptkey: String::from(""),
+        value: 0
     });
-
-    // match hash_transaction(tx) {
-    //     (_, Option::None) => {
-    //         return None
-    //     },
-    //     (o_tx, Option::Some(d)) => {
-    //         tx = o_tx;
-    //         tx.transaction_hash = d.as_ref().to_vec();
-    //         return Some(tx)
-    //     }
-    // }
-
+    
     Some(tx)
 }
 
@@ -93,6 +115,9 @@ impl Transaction {
         hasher.update(tx_bytes);
         return hasher.finalize().as_slice().to_owned()
     }
+
+    pub fn txid(&self) -> Vec<u8> {
+        let cloned_tx: Transaction = self.clone();
+        return cloned_tx.hash_transaction();
+    }
 }
-
-
