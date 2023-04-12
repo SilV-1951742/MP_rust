@@ -1,5 +1,6 @@
 use blockchain::block::encode_hex;
 use blockchain::blockchain::{Blockchain, new_blockchain};
+use blockchain::p2p_nw;
 // use blockchain::transaction::Transaction;
 // // use blockchain::merkle_tree;
 // use chrono::Utc;
@@ -19,10 +20,10 @@ fn main() {
     let mut pub_priv_map: std::collections::HashMap<String, String> = std::collections::HashMap::new();
 
     for f in 0..5 {
-        let private_contents = std::fs::read_to_string(format!("../keys/private_key{}.pem", f))
+        let private_contents = std::fs::read_to_string(format!("keys/private_key{}.pem", f))
             .expect("Should have been able to read the file");
     
-        let public_contents = std::fs::read_to_string(format!("../keys/public_key{}.pem", f))
+        let public_contents = std::fs::read_to_string(format!("keys/public_key{}.pem", f))
             .expect("Should have been able to read the file");
 
         let private_key: Vec<u8> = EcKey::private_key_from_pem(private_contents.as_bytes()).unwrap().private_key().to_vec();
@@ -57,29 +58,10 @@ fn main() {
         pub_priv_map.insert(encode_hex(pub_key.clone()), encode_hex(private_key.clone()));
     }
 
+    println!("Public key -- Private key");
     for (key, val) in &pub_priv_map {
         println!("{} -- {}", key, val);
     }
-    
-    let example_transaction: &str = r#"
-{
-	"vin": [{
-		"txid": "0",
-		"vout": 0,
-		"scriptkey": "1"
-	}],
-	"vout": [{
-		"n": 0,
-		"address": "1",
-		"scriptkey": "1",
-		"value": 50
-	}]
-}
-"#;
-
-    // let new_transaction: Transaction = serde_json::from_str(example_transaction).unwrap();
-
-    // println!("{:?}", new_transaction);
 
     let new_blockchain: Blockchain = new_blockchain();
 
@@ -91,4 +73,6 @@ fn main() {
     assert_eq!(1, new_blockchain.blocks.len());
 
     println!("{:?}", new_blockchain);
+
+    let _ = p2p_nw::main();
 }

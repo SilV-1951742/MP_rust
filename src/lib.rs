@@ -2,6 +2,7 @@ pub mod transaction;
 // pub mod merkle_tree;
 pub mod block;
 pub mod blockchain;
+pub mod p2p_nw;
 
 #[cfg(test)]
 mod tests {

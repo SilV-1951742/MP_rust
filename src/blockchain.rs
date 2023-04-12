@@ -1,6 +1,6 @@
 use std::fmt;
 use crate::block::{Block, leading_zeros, mine_block};
-use log::{info, warn, error};
+use log::{warn, error};
 use hex;
 use itertools::Itertools;
 use crate::transaction::Transaction;
