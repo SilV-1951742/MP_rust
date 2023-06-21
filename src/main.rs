@@ -2,7 +2,7 @@ use blockchain::block::encode_hex;
 use blockchain::blockchain::{Blockchain, new_blockchain};
 use blockchain::p2p_nw;
 // use blockchain::transaction::Transaction;
-// // use blockchain::merkle_tree;
+// use blockchain::merkle_tree;
 // use chrono::Utc;
 use log::{info, error};
 use secp256k1::{Secp256k1, Message, SecretKey, PublicKey};
@@ -10,9 +10,11 @@ use sha2::{Sha256, Digest};
 use openssl::ec::{EcGroup, EcKey, PointConversionForm};
 use openssl::nid::Nid;
 use openssl::bn::BigNumContext;
+use std::error::Error;
 
 
-fn main() {
+#[async_std::main]
+async fn main() -> Result<(), Box<dyn Error>> {
     pretty_env_logger::init();
 
     info!("In main!");
@@ -63,7 +65,7 @@ fn main() {
         println!("{} -- {}", key, val);
     }
 
-    let new_blockchain: Blockchain = new_blockchain();
+    let new_blockchain: Blockchain = new_blockchain(4);
 
     match new_blockchain.validate_chain() {
         Result::Ok(l) => info!("Chain is ok! Checked {} blocks", l),
@@ -72,7 +74,9 @@ fn main() {
 
     assert_eq!(1, new_blockchain.blocks.len());
 
-    println!("{:?}", new_blockchain);
+    // println!("{:?}", new_blockchain);
 
-    let _ = p2p_nw::main();
+    let _new_client = p2p_nw::run().await?;
+
+    Ok(())
 }

@@ -41,10 +41,10 @@ pub struct Blockchain {
     pub mempool: Vec<Transaction>
 }
 
-pub fn new_blockchain() -> Blockchain {
+pub fn new_blockchain(diff: u32) -> Blockchain {
     let mut new_blockchain: Blockchain = Blockchain {
         blocks: vec![],
-        difficulty: 4,
+        difficulty: diff,
         mempool: vec![]
     };
     new_blockchain.construct_genesis();
@@ -57,20 +57,18 @@ impl Blockchain {
         let mut txs: Vec<Transaction> = vec![];
         let genesis_transaction: &str = r#"
 {
-	"vin": [],
-	"vout": [{
-		"n": 0,
-		"address": "02eaf53b6f60206010e866d707c28e41f18e1d7076105a8d2d9952bf0bacf54762",
-		"scriptkey": "first block!",
-		"value": 1000000000
-	}]
+        "transaction_id": "1",
+        "input_transaction_id": "0",
+        "property_id": "abcdef",
+        "buyer_id": "02eaf53b6f60206010e866d707c28e41f18e1d7076105a8d2d9952bf0bacf54762",
+        "seller_id": "025e5ecbee213695b7ba9d01cf82188299627b054bc9fff368c6fe3bc24c66dc4a",
+        "signatures": {"buyer1":"aaaaa","buyer2":"bbbbb"}
 }
 "#;
         let new_transaction: Transaction = serde_json::from_str(genesis_transaction).unwrap();
         txs.push(new_transaction);
         
         let genesis_block = Block {
-            id: 0,
             timestamp: Utc::now().timestamp(),
             prev_hash: String::from("0"),
             nonce: 0,
@@ -85,7 +83,7 @@ impl Blockchain {
     pub fn add_block(&mut self, block: Block) -> Result<(), BlockAddError> {
         let previous_block: &Block = self.blocks.last().expect("There is a least one block");
         match self.validate_block(&block, previous_block) {
-            Result::Ok(_) => {
+            Result::Ok(_) =>{ 
                 self.blocks.push(block);
                 Result::Ok(())
             },
@@ -96,19 +94,19 @@ impl Blockchain {
         }
     }
 
+    pub fn add_transaction(&mut self, transaction: Transaction) {
+        self.mempool.push(transaction);
+    }
+
     fn validate_block(&self, block: &Block, previous_block: &Block) -> Result<(), BlockValidationError> {
         if block.prev_hash != previous_block.hash {
-            warn!("block with id: {} has wrong previous hash", block.id);
+            warn!("block {} has wrong previous hash", block.hash);
             return Result::Err(BlockValidationError);
         } else if leading_zeros(hex::decode(&block.hash).expect("Can't decode hex string!")) < self.difficulty {
-            warn!("block with id: {} has invalid difficulty", block.id);
-            return Result::Err(BlockValidationError);
-        } else if block.id != previous_block.id + 1 {
-            warn!("block with id: {} is not the next block after the latest: {}",
-                block.id, previous_block.id);
+            warn!("block {} has invalid difficulty", block.hash);
             return Result::Err(BlockValidationError);
         } else if hex::encode(block.hash_block()) != block.hash {
-            warn!("block with id: {} has invalid hash", block.id);
+            warn!("block {} has invalid hash", block.hash);
             println!("Got {} and expected {}", block.hash, hex::encode(block.hash_block()));
             return Result::Err(BlockValidationError);
         }
@@ -120,7 +118,7 @@ impl Blockchain {
             match self.validate_block(block2, block1) {
                 Result::Ok(_) => continue,
                 Result::Err(_) => {
-                    error!("Couldn't validate block {}!", block2.id);
+                    error!("Couldn't validate block {}!", block2.hash);
                     return Result::Err(ChainValidationError);
                 }
             }

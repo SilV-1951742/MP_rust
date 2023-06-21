@@ -17,17 +17,10 @@ mod tests {
     fn test_transaction() {
         let example_transaction: &str = r#"
 {
-	"vin": [{
-		"txid": "3f4fa19803dec4d6a84fae3821da7ac7577080ef75451294e71f9b20e0ab1e7b",
-		"vout": 0,
-		"scriptkey": "1",
-	}],
-	"vout": [{
-		"n": 0,
-		"address": "1",
-		"scriptkey": "1",
-		"value": 50.0,
-	}]
+        "property_id": "abcdef",
+        "buyer_id": "buyer1",
+        "seller_id": "buyer2",
+        "signatures": {"buyer1":"aaaaa","buyer2":"bbbbb"}
 }
 "#;
 
@@ -49,15 +42,8 @@ mod tests {
     
     #[test]
     fn test_blockchain() {
-        let mut new_blockchain: Blockchain = new_blockchain();
-        let example_block1: Block = Block {
-            id: 1,
-            timestamp: Utc::now().timestamp(),
-            prev_hash: String::from("0"),
-            nonce: 0,
-            hash: String::from(""),
-            transactions: vec![]
-        };
+        let mut new_blockchain: Blockchain = new_blockchain(4);
+        let example_block1: Block = Block(1, String::from("0"), vec![]);
 
         let mined_block1: Block = mine_block(example_block1, 4);
         match new_blockchain.add_block(mined_block1) {
@@ -65,14 +51,7 @@ mod tests {
             Result::Err(_) => panic!("Couldn't add block!")
         };
 
-        let example_block2: Block = Block {
-            id: 2,
-            timestamp: Utc::now().timestamp(),
-            prev_hash: new_blockchain.blocks.last().unwrap().hash.clone(),
-            nonce: 0,
-            hash: String::from(""),
-            transactions: vec![]
-        };
+        let example_block1: Block = Block(2, new_blockchain.blocks.last().unwrap().hash.clone(), vec![]);
     
         let mined_block2: Block = mine_block(example_block2, 4);
         match new_blockchain.add_block(mined_block2) {
@@ -80,29 +59,15 @@ mod tests {
             Result::Err(_) => panic!("Couldn't add block!")
         };
 
-        let example_block3: Block = Block {
-            id: 3,
-            timestamp: Utc::now().timestamp(),
-            prev_hash: new_blockchain.blocks.last().unwrap().hash.clone(),
-            nonce: 0,
-            hash: String::from(""),
-            transactions: vec![]
-        };
+        let example_block1: Block = Block(3, new_blockchain.blocks.last().unwrap().hash.clone(), vec![]);
 
         let mined_block3: Block = mine_block(example_block3, 4);
         match new_blockchain.add_block(mined_block3) {
             Result::Ok(_) => info!("Successfully added block!"),
             Result::Err(_) => panic!("Couldn't add block!")
         };
-    
-        let example_block4: Block = Block {
-            id: 4,
-            timestamp: Utc::now().timestamp(),
-            prev_hash: new_blockchain.blocks.last().unwrap().hash.clone(),
-            nonce: 0,
-            hash: String::from(""),
-            transactions: vec![]
-        };
+
+        let example_block1: Block = Block(4, new_blockchain.blocks.last().unwrap().hash.clone(), vec![]);
 
         let mined_block4: Block = mine_block(example_block4, 4);
         match new_blockchain.add_block(mined_block4) {
